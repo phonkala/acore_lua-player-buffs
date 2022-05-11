@@ -1,18 +1,15 @@
 --------------------------------------------------
 --  
 --  Lua Player Buffs for AzerothCore @ https://github.com/azerothcore/azerothcore-wotlk
---  
 --  Created by Grandold @ https://github.com/phonkala, Grandold#2267 @ Discord
 --  Requires Eluna Lua Engine @ https://github.com/azerothcore/mod-eluna
 --  
 --------------------------------------------------
 --  
---  This module is used to buff players based on class, spec and level range.
+--  This script is used to buff players based on class, spec and level range.
 --  
---  The module was originally just a casual learning experience / introduction to
+--  The script was originally just a casual learning experience / introduction to
 --  Lua language, but it actually seems quite handy on my private AzerothCore server!
---  
---  - Grandold
 --  
 --------------------------------------------------
 --  
@@ -22,8 +19,9 @@
 --  * Create spells from scratch, currectly using clones of spells from https://github.com/55Honey/Acore_ZoneDebuff
 --    * We do not want damageDone and damageTaken buffs combined into one spell, actually we don't want damageTaken at all.
 --    * Also we want baseStats and (melee & ranged) AP buffs separated into 2 different spells.
---    *** I could use some help here as I currently have no access to AzerothCore DB to re-create the spells.
---    *** Feel free to pm me in Discord. It's all currently working as far as I know, but could be optimized.
+--  
+--      I could use some help with the spells as I currently have no access to AzerothCore DB to re-create them.
+--      Feel free to pm me in Discord. It is all currently working as far as I know, but could be optimized.
 --  
 --------------------------------------------------
 
@@ -37,14 +35,14 @@ config.isActive = 1
 config.debug = 0
 
 
--- Function to set up the buffs.
+-- Function to register the buffs.
 --
 -- classID          Unit class ID. 
 -- talentSpecID     Unit specialization ID. Set to 0 to apply buff to all talent specs.
 -- levelRequired    Required level for the buff to be applied.
 -- buffTypeID       Buff type ID.
--- modifier         Modifier from original (not modified) value in percentage (no % character).
-local function setPlayerBuff (classID, talentSpecID, levelRequired, buffTypeID, modifier)
+-- modifier         Modifier from original (not previously modified) value in percentage (no % character).
+local function registerPlayerBuff (classID, talentSpecID, levelRequired, buffTypeID, modifier)
     
     -- Create required object structure for storing data.
     if not playerBuffs[classID] then playerBuffs[classID] = {} end
@@ -124,20 +122,20 @@ local SPELL_BUFF_HEALING_DONE       =   4
 -- Hunter pet buffs override previous hunter buff values of the same buff type for pets specifically.
 
 -- Increase feral druid damage done and taken by 20% up to level 50 and by 10% up to level 75.
-setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 20)
-setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 50, SPELL_BUFF_DAMAGE_DONE_TAKEN, 10)
-setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 20)
+registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 50, SPELL_BUFF_DAMAGE_DONE_TAKEN, 10)
+registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 
 -- Reduce all hunter damage done and taken by 20% up to level 30 and by 10% up to level 70.
-setPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -20)
-setPlayerBuff(CLASS_HUNTER, 0, 30, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
-setPlayerBuff(CLASS_HUNTER, 0, 70, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+registerPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -20)
+registerPlayerBuff(CLASS_HUNTER, 0, 30, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
+registerPlayerBuff(CLASS_HUNTER, 0, 70, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 -- Don't reduce survival hunter damage done and taken at all. This overrides (all) previous hunter buffs of same type.
-setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+registerPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 
 -- Reduce BM hunter pet damage by 10% all the way until level 80. These override previous hunter buffs of same type.
-setPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
-setPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
+registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 
 
 --------------------------------------------------
@@ -398,6 +396,7 @@ local function applyUnitBuffsByTalentSpec(unit, classID, talentSpecID, talentSpe
     end
     
 end
+
 
 --
 local function applyPlayerBuffs (player)
