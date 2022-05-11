@@ -20,7 +20,9 @@
 --  
 --  * Remove spellHealthPoints and spellRageFromDamage completely (from DB too).
 --  * Create spells from scratch, currectly using clones of spells from https://github.com/55Honey/Acore_ZoneDebuff
---    * Could use some help here as I currently have no access to AzerothCore DB to create the spells. Feel free to pm me in Discord.
+--    * We do not want damageDone and damageTaken buffs combined into one spell, actually we don't want damageTaken at all.
+--    * Also we want baseStats and (melee and ranged) AP buffs separated into 2 different spells.
+--    ** I could use some help here as I currently have no access to AzerothCore DB to re-create the spells. Feel free to pm me in Discord.
 --  
 --------------------------------------------------
 
@@ -52,7 +54,7 @@ local function setPlayerBuff (classID, talentSpecID, levelRequired, buffTypeID, 
     playerBuffs[classID][talentSpecID][levelRequired][buffTypeID] = modifier
     
     if config.debug == 1 then
-        print('[lua-player-buffs] Loaded buff: classID: ' .. classID .. ', talentSpecID: ' .. talentSpecID ..
+        print('[lua-player-buffs] Buff registered: classID: ' .. classID .. ', talentSpecID: ' .. talentSpecID ..
               ', levelRequired: ' .. levelRequired .. ', buffTypeID: ' .. buffTypeID .. ', modifier: ' .. modifier .. '(%)')
     end
     
@@ -112,14 +114,60 @@ local SPELL_BUFF_ABSORB_GIVEN       =   3
 local SPELL_BUFF_HEALING_DONE       =   4
 
 
--- Set up the buffs.
+--------------------------------------------------
+-- SET UP THE BUFFS.
+--------------------------------------------------
+
+-- Note: These are mostly just for demonstration purposes, please set up your own buffs however you like.
+-- Class buffs (talentSpecID == 0) are always overridden by specific talent spec buffs of the same buff type.
+-- Hunter pet buffs override previous hunter buff values of the same buff type for pets specifically.
+
+-- Increase feral druid damage done and taken by 20% up to level 50 and by 10% up to level 75.
 setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 20)
+setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 50, SPELL_BUFF_DAMAGE_DONE_TAKEN, 10)
 setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
-setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 100)
-setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_MARKSMANSHIP, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 100)
-setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 100)
-setPlayerBuff(CLASS_HUNTER, PET_HUNTER_MARKSMANSHIP, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 50)
-setPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 200)
+
+-- Reduce all hunter damage done and taken by 20% up to level 30 and by 10% up to level 70.
+setPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -20)
+setPlayerBuff(CLASS_HUNTER, 0, 30, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
+setPlayerBuff(CLASS_HUNTER, 0, 70, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+-- Don't reduce survival hunter damage done and taken at all. This overrides (all) previous hunter buffs of same type.
+setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+
+-- Reduce BM hunter pet damage by 10% all the way until level 80. These override previous hunter buffs of same type.
+setPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
+setPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+
+
+
+
+
+
+
+
+
+
+setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 20)
+setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 50, SPELL_BUFF_DAMAGE_DONE_TAKEN, 10)
+setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+
+-- Reduce all hunter damage done and taken by 20% up to level 30 and by 10% up to level 70.
+setPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -20)
+setPlayerBuff(CLASS_HUNTER, 0, 30, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
+setPlayerBuff(CLASS_HUNTER, 0, 70, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+-- Don't reduce survival hunter damage done and taken at all. This overrides (all) previous hunter buffs of same type.
+setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+
+-- Reduce BM hunter pet damage by 10% all the way until level 80. These override previous hunter buffs of same type.
+setPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
+setPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+
+
+
+
+
+
+
 
 
 --------------------------------------------------
@@ -424,6 +472,7 @@ end
 
 --
 local PLAYER_EVENT_ON_LOGIN         =  3
+local PLAYER_EVENT_ON_CHAT          = 18
 local PLAYER_EVENT_ON_MAP_CHANGE    = 28
 local PLAYER_EVENT_ON_RESURRECT     = 36
 local PLAYER_EVENT_ON_PET_SPAWNED   = 43
@@ -449,10 +498,17 @@ local function triggerOnResurrectEvent (event, player)
     end
     applyPlayerBuffs(player)
 end
-local function triggerOnPetSpawnedEvent (event, player, pet)
+local function triggerOnPetSpawnedEvent (event, player, _)
     if config.debug == 1 then
         print('[lua-player-buffs] ----------------------------------------')
         print('[lua-player-buffs] ** OnPetSpawnedEvent')
+    end
+    applyPlayerBuffs(player)
+end
+local function triggerOnChatEvent (event, player, _, _, _)
+    if config.debug == 1 then
+        print('[lua-player-buffs] ----------------------------------------')
+        print('[lua-player-buffs] ** OnChatEvent')
     end
     applyPlayerBuffs(player)
 end
@@ -462,4 +518,7 @@ if config.isActive == 1 then
     RegisterPlayerEvent(PLAYER_EVENT_ON_MAP_CHANGE, triggerOnMapChangeEvent)
     RegisterPlayerEvent(PLAYER_EVENT_ON_RESURRECT, triggerOnResurrectEvent)
     RegisterPlayerEvent(PLAYER_EVENT_ON_PET_SPAWNED, triggerOnPetSpawnedEvent)
+    if config.debug == 1 then
+        RegisterPlayerEvent(PLAYER_EVENT_ON_CHAT, triggerOnChatEvent)
+    end
 end
