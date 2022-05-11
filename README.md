@@ -2,7 +2,7 @@
 
 Lua Player Buffs for AzerothCore @ https://github.com/azerothcore/azerothcore-wotlk
 
-Created by Grandold @ https://github.com/phonkala, Grandold#2267 @ Discord
+Created by Grandold @ https://github.com/phonkala, Grandold#2267 @ Discord  
 Requires Eluna Lua Engine @ https://github.com/azerothcore/mod-eluna
 
 This module is used to buff players based on class, spec and level range.
