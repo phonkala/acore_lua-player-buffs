@@ -6,7 +6,7 @@
 --  
 --------------------------------------------------
 --  
---  This script is used to buff players based on class, spec and level range.
+--  This script is used to buff players based on class, talent spec and level range.
 --  
 --  The script was originally just a casual learning experience / introduction to
 --  Lua language, but it actually seems quite handy on my private AzerothCore server!
