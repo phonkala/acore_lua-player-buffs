@@ -2,16 +2,15 @@
 --  
 --  Lua Player Buffs for AzerothCore @ https://github.com/azerothcore/azerothcore-wotlk
 --  
---  Created by Grandold @ https://github.com/phonkala
+--  Created by Grandold @ https://github.com/phonkala, Grandold#2267 @ Discord
 --  Requires Eluna Lua Engine @ https://github.com/azerothcore/mod-eluna
 --  
 --------------------------------------------------
 --  
 --  This module is used to buff players based on class, spec and level range.
 --  
---  The module was originally just a casual learning experience / introduction to Lua language
---  and for developing stuff for AzerothCore, but it actually seems to work fine on my private
---  server :)
+--  The module was originally just a casual learning experience / introduction to
+--  Lua language, but it actually seems quite handy on my private AzerothCore server!
 --  
 --  - Grandold
 --  
@@ -19,8 +18,9 @@
 --  
 --  TO DO:
 --  
---  * Class buffs (specID 0).
---  * Create spells from scratch, currectly using clones of spells from https://github.com/55Honey/Acore_ZoneDebuff.
+--  * Remove spellHealthPoints and spellRageFromDamage completely (from DB too).
+--  * Create spells from scratch, currectly using clones of spells from https://github.com/55Honey/Acore_ZoneDebuff
+--    * Could use some help here as I currently have no access to AzerothCore DB to create the spells. Feel free to pm me in Discord.
 --  
 --------------------------------------------------
 
@@ -37,7 +37,7 @@ config.debug = 1
 -- Function to set up the buffs.
 --
 -- classID          Unit class ID. 
--- talentSpecID     Unit specialization ID. TO DO: Set to 0 to apply buff to all specs.
+-- talentSpecID     Unit specialization ID. Set to 0 to apply buff to all talent specs.
 -- levelRequired    Required level for the buff to be applied.
 -- buffTypeID       Buff type ID.
 -- modifier         Modifier from original (not modified) value in percentage (no % character).
@@ -52,13 +52,14 @@ local function setPlayerBuff (classID, talentSpecID, levelRequired, buffTypeID, 
     playerBuffs[classID][talentSpecID][levelRequired][buffTypeID] = modifier
     
     if config.debug == 1 then
-        print('[lua-player-buffs] Setting up buff: classID: ' .. classID .. ', talentSpecID: ' .. talentSpecID .. ', levelRequired: ' .. levelRequired .. ', buffTypeID: ' .. buffTypeID .. ', modifier: ' .. modifier)
+        print('[lua-player-buffs] Loaded buff: classID: ' .. classID .. ', talentSpecID: ' .. talentSpecID ..
+              ', levelRequired: ' .. levelRequired .. ', buffTypeID: ' .. buffTypeID .. ', modifier: ' .. modifier .. '(%)')
     end
     
 end
 
 
--- IDs of classes and specs (talentTabIDs).
+-- IDs of classes and specs.
 local CLASS_WARRIOR                 =    1
 local     SPEC_WARRIOR_ARMS         =  161
 local     SPEC_WARRIOR_FURY         =  164
@@ -68,12 +69,12 @@ local     SPEC_PALADIN_HOLY         =  382
 local     SPEC_PALADIN_PROTECTION   =  383
 local     SPEC_PALADIN_RETRIBUTION  =  381
 local CLASS_HUNTER                  =    3
-local     SPEC_HUNTER_BEASTMASTERY  =  361 -- All pets get automatically same buffs as their owners.
+local     SPEC_HUNTER_BEASTMASTERY  =  361 -- ALL pets get automatically same buffs as their owners.
 local     SPEC_HUNTER_MARKSMANSHIP  =  363 -- 
 local     SPEC_HUNTER_SURVIVAL      =  362 --
 local     PET_HUNTER_BEASTMASTERY   = 3610 -- Each hunter specialization pet buffs can be set separately too.
 local     PET_HUNTER_MARKSMANSHIP   = 3630 -- This way it is possible to override the values inherited from 
-local     PET_HUNTER_SURVIVAL       = 3620 -- hunter spec values to have different buffs for the hunter and the pet.
+local     PET_HUNTER_SURVIVAL       = 3620 -- hunter spec values to set different buffs for the hunter and the pet.
 local CLASS_ROGUE                   =    4
 local     SPEC_ROGUE_ASSASSINATION  =  182
 local     SPEC_ROGUE_COMBAT         =  181
@@ -105,10 +106,10 @@ local     SPEC_DRUID_RESTORATION    =  282
 
 
 -- IDs of buff types.
-local SPELL_BUFF_HEALTH_POINTS      =   1 -- TO DO: Currently not working, probably need to refactor the spell.
+local SPELL_BUFF_HEALTH_POINTS      =   1 -- TO DO: Remove this (DB too)
 local SPELL_BUFF_DAMAGE_DONE_TAKEN  =   2
 local SPELL_BUFF_BASE_STATS_AP      =   3
-local SPELL_BUFF_RAGE_FROM_DAMAGE   =   4
+local SPELL_BUFF_RAGE_FROM_DAMAGE   =   4 -- TO DO: Remove this (DB too)
 local SPELL_BUFF_ABSORB_GIVEN       =   5
 local SPELL_BUFF_HEALING_DONE       =   6
 
@@ -120,6 +121,7 @@ setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_
 setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_MARKSMANSHIP, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 100)
 setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 100)
 setPlayerBuff(CLASS_HUNTER, PET_HUNTER_MARKSMANSHIP, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 50)
+setPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 200)
 
 
 --------------------------------------------------
@@ -191,7 +193,7 @@ local function calculateTalentPoints (characterID, specID)
         repeat
             
             local spellID, tabID = Q:GetUInt32(1), Q:GetUInt32(3)
-            local spellRank0, spellRank1, spellRank2, spellRank3, spellRank4, spellRank5, spellRank6, spellRank7,spellRank8
+            local spellRank0, spellRank1, spellRank2, spellRank3, spellRank4, spellRank5, spellRank6, spellRank7, spellRank8
                 = Q:GetUInt32(6), Q:GetUInt32(7), Q:GetUInt32(8), Q:GetUInt32(9), Q:GetUInt32(10), Q:GetUInt32(11), Q:GetUInt32(12), Q:GetUInt32(13), Q:GetUInt32(14)
             
             if not talentPoints[tabID] then talentPoints[tabID] = 0 end
@@ -259,12 +261,12 @@ end
 function Player:GetTalentSpec ()
     
     local classID = self:GetClass()
-    local currentSpecID = self:GetActiveSpec()
+    local currentSpec = self:GetActiveSpec()
     
-    local talentSpecID = getDominantTalentSpec(self:GetGUIDLow(), currentSpecID)
+    local talentSpecID = getDominantTalentSpec(self:GetGUIDLow(), currentSpec)
     
     if config.debug == 1 then
-        print('[lua-player-buffs] >>> Detected talent specialization for ' .. self:GetName() .. ': currentSpecID: ' .. currentSpecID .. '(0/1), talentSpecID: ' .. talentSpecID)
+        print('[lua-player-buffs] >>> Detected talentSpec for ' .. self:GetName() .. ': currentSpec: ' .. currentSpec .. '(0/1), talentSpecID: ' .. talentSpecID)
     end
     
     return talentSpecID
@@ -290,7 +292,7 @@ local function applyUnitBuff (unit, buffTypeID, modifier)
             unit:RemoveAura(spellToApply)
             
             if config.debug == 1 then
-                print('[lua-player-buffs] - Removed previous buff with spellID: ' .. spellToApply .. ' removed from ' .. unit:GetName())
+                print('[lua-player-buffs] - Removed previous buff with spellID: ' .. spellToApply .. ' from ' .. unit:GetName())
             end
             
         end
@@ -306,7 +308,7 @@ local function applyUnitBuff (unit, buffTypeID, modifier)
             end
             
             if config.debug == 1 then
-                print('[lua-player-buffs] + Buff applied for ' .. unit:GetName() .. ': buffTypeID: ' .. buffTypeID .. ', spellID: ' .. spellToApply .. ', modifier: ' .. modifier .. '(%)')
+                print('[lua-player-buffs] + Buff applied to ' .. unit:GetName() .. ': buffTypeID: ' .. buffTypeID .. ', spellID: ' .. spellToApply .. ', modifier: ' .. modifier .. '(%)')
             end
             
         end
@@ -317,11 +319,11 @@ end
 
 
 --
-local function applyUnitBuffsByTalentSpec(unit, classID, talentSpecID, specValues)
+local function applyUnitBuffsByTalentSpec(unit, classID, talentSpecID, talentSpecValues)
     
-    -- Buffs need to be sorted by level requirements.
+    -- Buffs need to be sorted by buff level requirement (asc) to handle the lower level buffs first.
     local orderedLevelKeys  = {}
-    for i in pairs(specValues) do
+    for i in pairs(talentSpecValues) do
         table.insert(orderedLevelKeys, i)
     end
     table.sort(orderedLevelKeys)
@@ -363,7 +365,7 @@ local function applyUnitBuffsByTalentSpec(unit, classID, talentSpecID, specValue
                 end
                 
                 -- Also separately buff hunter pets if needed.
-                -- We re-use this same function as hunter pets are handled as any unit talent spec.
+                -- We re-use this same function as hunter pets are handled as any player talent spec.
                 
                 if classID == CLASS_HUNTER and talentSpecID == SPEC_HUNTER_BEASTMASTERY and playerBuffs[CLASS_HUNTER][PET_HUNTER_BEASTMASTERY] ~= nil then
                     applyUnitBuffsByTalentSpec(pet, CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, playerBuffs[CLASS_HUNTER][PET_HUNTER_BEASTMASTERY])
@@ -397,13 +399,23 @@ local function applyPlayerBuffs (player)
     
     for classKey, classValues in pairs(playerBuffs) do
         
-        if classID == classKey then
+        if classKey == classID then
             
-            for specKey, specValues in pairs(classValues) do
+            -- Buffs need to be sorted by talentSpecKey (asc) to handle the class buffs first.
+            local orderedTalentSpecKeys  = {}
+            for i in pairs(classValues) do
+                table.insert(orderedTalentSpecKeys, i)
+            end
+            table.sort(orderedTalentSpecKeys)
+            
+            -- Loop through the buffs.
+            for i = 1, #orderedTalentSpecKeys do
                 
-                if talentSpecID == specKey then
+                local talentSpecKey, talentSpecValues = orderedTalentSpecKeys[i], playerBuffs[classID][orderedTalentSpecKeys[i]]
+                
+                if talentSpecKey == 0 or talentSpecKey == talentSpecID then
                     
-                    applyUnitBuffsByTalentSpec(player, classID, talentSpecID, specValues)
+                    applyUnitBuffsByTalentSpec(player, classKey, talentSpecKey, talentSpecValues)
                     
                 end
                 
