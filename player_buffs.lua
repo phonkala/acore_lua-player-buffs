@@ -18,11 +18,12 @@
 --  
 --  TO DO:
 --  
---  * Remove spellHealthPoints and spellRageFromDamage completely (from DB too).
+--  * More and more testing.
 --  * Create spells from scratch, currectly using clones of spells from https://github.com/55Honey/Acore_ZoneDebuff
 --    * We do not want damageDone and damageTaken buffs combined into one spell, actually we don't want damageTaken at all.
---    * Also we want baseStats and (melee and ranged) AP buffs separated into 2 different spells.
---    ** I could use some help here as I currently have no access to AzerothCore DB to re-create the spells. Feel free to pm me in Discord.
+--    * Also we want baseStats and (melee & ranged) AP buffs separated into 2 different spells.
+--    *** I could use some help here as I currently have no access to AzerothCore DB to re-create the spells.
+--    *** Feel free to pm me in Discord. It's all currently working as far as I know, but could be optimized.
 --  
 --------------------------------------------------
 
@@ -33,7 +34,7 @@ local playerBuffs = {}
 
 -- Config values.
 config.isActive = 1
-config.debug = 1
+config.debug = 0
 
 
 -- Function to set up the buffs.
@@ -137,37 +138,6 @@ setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKE
 -- Reduce BM hunter pet damage by 10% all the way until level 80. These override previous hunter buffs of same type.
 setPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
 setPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
-
-
-
-
-
-
-
-
-
-
-setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 20)
-setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 50, SPELL_BUFF_DAMAGE_DONE_TAKEN, 10)
-setPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
-
--- Reduce all hunter damage done and taken by 20% up to level 30 and by 10% up to level 70.
-setPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -20)
-setPlayerBuff(CLASS_HUNTER, 0, 30, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
-setPlayerBuff(CLASS_HUNTER, 0, 70, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
--- Don't reduce survival hunter damage done and taken at all. This overrides (all) previous hunter buffs of same type.
-setPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
-
--- Reduce BM hunter pet damage by 10% all the way until level 80. These override previous hunter buffs of same type.
-setPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
-setPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
-
-
-
-
-
-
-
 
 
 --------------------------------------------------
@@ -334,7 +304,7 @@ local function applyUnitBuff (unit, buffTypeID, modifier)
             unit:RemoveAura(spellToApply)
             
             if config.debug == 1 then
-                print('[lua-player-buffs] - Removed previous buff with spellID: ' .. spellToApply .. ' from ' .. unit:GetName())
+                print('[lua-player-buffs] - Buff removed from ' .. unit:GetName() .. ': buffTypeID: ' .. buffTypeID .. ', spellID: ' .. spellToApply .. ', modifier: ' .. modifier .. '(%)')
             end
             
         end
@@ -409,15 +379,15 @@ local function applyUnitBuffsByTalentSpec(unit, classID, talentSpecID, talentSpe
                 -- Also separately buff hunter pets if needed.
                 -- We re-use this same function as hunter pets are handled as any player talent spec.
                 
-                if classID == CLASS_HUNTER and talentSpecID == SPEC_HUNTER_BEASTMASTERY and playerBuffs[CLASS_HUNTER][PET_HUNTER_BEASTMASTERY] ~= nil then
+                if classID == CLASS_HUNTER and ( talentSpecID == SPEC_HUNTER_BEASTMASTERY or talentSpecID == 0 ) and playerBuffs[CLASS_HUNTER][PET_HUNTER_BEASTMASTERY] ~= nil then
                     applyUnitBuffsByTalentSpec(pet, CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, playerBuffs[CLASS_HUNTER][PET_HUNTER_BEASTMASTERY])
                 end
                 
-                if classID == CLASS_HUNTER and talentSpecID == SPEC_HUNTER_MARKSMANSHIP and playerBuffs[CLASS_HUNTER][PET_HUNTER_MARKSMANSHIP] ~= nil then
+                if classID == CLASS_HUNTER and ( talentSpecID == SPEC_HUNTER_MARKSMANSHIP or talentSpecID == 0 ) and playerBuffs[CLASS_HUNTER][PET_HUNTER_MARKSMANSHIP] ~= nil then
                     applyUnitBuffsByTalentSpec(pet, CLASS_HUNTER, PET_HUNTER_MARKSMANSHIP, playerBuffs[CLASS_HUNTER][PET_HUNTER_MARKSMANSHIP])
                 end
                 
-                if classID == CLASS_HUNTER and talentSpecID == SPEC_HUNTER_SURVIVAL and playerBuffs[CLASS_HUNTER][PET_HUNTER_SURVIVAL] ~= nil then
+                if classID == CLASS_HUNTER and ( talentSpecID == SPEC_HUNTER_SURVIVAL or talentSpecID == 0 ) and playerBuffs[CLASS_HUNTER][PET_HUNTER_SURVIVAL] ~= nil then
                     applyUnitBuffsByTalentSpec(pet, CLASS_HUNTER, PET_HUNTER_SURVIVAL, playerBuffs[CLASS_HUNTER][PET_HUNTER_SURVIVAL])
                 end
                 
