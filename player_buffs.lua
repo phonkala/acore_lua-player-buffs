@@ -29,7 +29,7 @@ local playerBuffs = {}
 
 -- Config values.
 config.isActive = 1
-config.debug = 0
+config.debug = 1
 
 
 -- Function to register the buffs.
@@ -104,10 +104,12 @@ local     SPEC_DRUID_RESTORATION    =  282
 
 
 -- IDs of buff types.
-local SPELL_BUFF_DAMAGE_DONE_TAKEN  =   1
-local SPELL_BUFF_BASE_STATS_AP      =   2
-local SPELL_BUFF_ABSORB_GIVEN       =   3
-local SPELL_BUFF_HEALING_DONE       =   4
+local SPELL_BUFF_HEALTH_POINTS      =    1
+local SPELL_BUFF_DAMAGE_DONE_TAKEN  =    2
+local SPELL_BUFF_BASE_STATS_AP      =    3
+local SPELL_BUFF_RAGE_FROM_DAMAGE   =    4
+local SPELL_BUFF_ABSORB_GIVEN       =    5
+local SPELL_BUFF_HEALING_DONE       =    6
 
 
 --------------------------------------------------
@@ -119,20 +121,21 @@ local SPELL_BUFF_HEALING_DONE       =   4
 -- Hunter pet buffs override previous hunter buff values of the same buff type for pets specifically.
 
 -- Increase feral druid damage done and taken by 20% up to level 50 and by 10% up to level 75.
-registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 20)
-registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 50, SPELL_BUFF_DAMAGE_DONE_TAKEN, 10)
-registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+--registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 20)
+--registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 50, SPELL_BUFF_DAMAGE_DONE_TAKEN, 10)
+--registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+--registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_BALANCE, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 100)
 
 -- Reduce all hunter damage done and taken by 20% up to level 30 and by 10% up to level 70.
-registerPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -20)
-registerPlayerBuff(CLASS_HUNTER, 0, 30, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
-registerPlayerBuff(CLASS_HUNTER, 0, 70, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+--registerPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -20)
+--registerPlayerBuff(CLASS_HUNTER, 0, 30, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
+--registerPlayerBuff(CLASS_HUNTER, 0, 70, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 -- Don't reduce survival hunter damage done and taken at all. This overrides (all) previous hunter buffs of same type.
-registerPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+--registerPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 
 -- Reduce BM hunter pet damage by 10% all the way until level 80. These override previous hunter buffs of same type.
-registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
-registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+--registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
+--registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 
 
 --------------------------------------------------
@@ -142,10 +145,12 @@ registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_
 
 -- Set up the buff spell IDs.
 config.spells = {}
-config.spells.spellDamageDoneTaken  = 123001
-config.spells.spellBaseStatAP       = 123002
-config.spells.spellAbsorbGiven      = 123003
-config.spells.spellHealingDone      = 123004
+config.spells.spellHealthPoints     = 123001
+config.spells.spellDamageDoneTaken  = 123002
+config.spells.spellBaseStatAP       = 123003
+config.spells.spellRageFromDamage   = 123004
+config.spells.spellAbsorbGiven      = 123005
+config.spells.spellHealingDone      = 123006
 
 
 --
@@ -287,8 +292,10 @@ end
 local function applyUnitBuff (unit, buffTypeID, modifier)
     
     local spellToApply = 0
+    if buffTypeID == SPELL_BUFF_HEALTH_POINTS       then spellToApply = config.spells.spellHealthPoints     end
     if buffTypeID == SPELL_BUFF_DAMAGE_DONE_TAKEN   then spellToApply = config.spells.spellDamageDoneTaken  end
     if buffTypeID == SPELL_BUFF_BASE_STATS_AP       then spellToApply = config.spells.spellBaseStatAP       end
+    if buffTypeID == SPELL_BUFF_RAGE_FROM_DAMAGE    then spellToApply = config.spells.spellRageFromDamage   end
     if buffTypeID == SPELL_BUFF_ABSORB_GIVEN        then spellToApply = config.spells.spellAbsorbGiven      end
     if buffTypeID == SPELL_BUFF_HEALING_DONE        then spellToApply = config.spells.spellHealingDone      end
 
