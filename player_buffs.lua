@@ -15,13 +15,10 @@
 --  
 --  TO DO:
 --  
---  * More and more testing.
---  * Create spells from scratch, currectly using clones of spells from https://github.com/55Honey/Acore_ZoneDebuff
---    * We do not want damageDone and damageTaken buffs combined into one spell, actually we don't want damageTaken at all.
---    * Also we want baseStats and (melee & ranged) AP buffs separated into 2 different spells.
---  
---      I could use some help with the spells as I currently have no access to AzerothCore DB to re-create them.
---      Feel free to pm me in Discord. It is all currently working as far as I know, but could be optimized.
+--  - More and more testing.
+--  - Add HP modifier spell again, it works now in https://github.com/55Honey/Acore_ZoneDebuff
+--  - Create spells from scratch, currectly using clones of spells from https://github.com/55Honey/Acore_ZoneDebuff
+--    - We want all effects to be singular buffs/spells, not combined (like basestats + melee ap + ranged ap  or damage done + taken)
 --  
 --------------------------------------------------
 
@@ -375,7 +372,7 @@ local function applyUnitBuffsByTalentSpec(unit, classID, talentSpecID, talentSpe
                 end
                 
                 -- Also separately buff hunter pets if needed.
-                -- We re-use this same function as hunter pets are handled as any player talent spec.
+                -- We re-use this same function as hunter pets are handled the same way as player talent specs.
                 
                 if classID == CLASS_HUNTER and ( talentSpecID == SPEC_HUNTER_BEASTMASTERY or talentSpecID == 0 ) and playerBuffs[CLASS_HUNTER][PET_HUNTER_BEASTMASTERY] ~= nil then
                     applyUnitBuffsByTalentSpec(pet, CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, playerBuffs[CLASS_HUNTER][PET_HUNTER_BEASTMASTERY])
