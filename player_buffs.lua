@@ -28,8 +28,8 @@ local playerBuffs = {}
 
 
 -- Config values.
-config.isActive = 1
-config.debug = 1
+config.isActive = 0
+config.debug = 0
 
 
 -- Function to register the buffs.
@@ -66,13 +66,13 @@ local CLASS_PALADIN                 =    2
 local     SPEC_PALADIN_HOLY         =  382
 local     SPEC_PALADIN_PROTECTION   =  383
 local     SPEC_PALADIN_RETRIBUTION  =  381
-local CLASS_HUNTER                  =    3
-local     SPEC_HUNTER_BEASTMASTERY  =  361 -- ALL pets get automatically same buffs as their owners.
-local     SPEC_HUNTER_MARKSMANSHIP  =  363 -- 
-local     SPEC_HUNTER_SURVIVAL      =  362 --
-local     PET_HUNTER_BEASTMASTERY   = 3610 -- Each hunter specialization pet buffs can be set separately too.
-local     PET_HUNTER_MARKSMANSHIP   = 3630 -- This way it is possible to override the values inherited from 
-local     PET_HUNTER_SURVIVAL       = 3620 -- hunter spec values to set different buffs for the hunter and the pet.
+local CLASS_HUNTER                  =    3 -- ALL pets (not just hunter) get automatically same buffs as their owners.
+local     SPEC_HUNTER_BEASTMASTERY  =  361 -- 
+local     SPEC_HUNTER_MARKSMANSHIP  =  363 -- Each hunter specialization pet buffs can be set separately too.
+local     SPEC_HUNTER_SURVIVAL      =  362 -- This way it is possible to override the values inherited from 
+local     PET_HUNTER_BEASTMASTERY   = 3610 -- hunter spec values to set different buffs for the hunter and the pet.
+local     PET_HUNTER_MARKSMANSHIP   = 3630 -- 
+local     PET_HUNTER_SURVIVAL       = 3620 -- NOTE: Hunter pet values apply ONLY if the hunter too has some buffs set up.
 local CLASS_ROGUE                   =    4
 local     SPEC_ROGUE_ASSASSINATION  =  182
 local     SPEC_ROGUE_COMBAT         =  181
@@ -121,21 +121,20 @@ local SPELL_BUFF_HEALING_DONE       =    6
 -- Hunter pet buffs override previous hunter buff values of the same buff type for pets specifically.
 
 -- Increase feral druid damage done and taken by 20% up to level 50 and by 10% up to level 75.
---registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 20)
---registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 50, SPELL_BUFF_DAMAGE_DONE_TAKEN, 10)
---registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
---registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_BALANCE, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 100)
+registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 20)
+registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 50, SPELL_BUFF_DAMAGE_DONE_TAKEN, 10)
+registerPlayerBuff(CLASS_DRUID, SPEC_DRUID_FERAL, 75, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 
 -- Reduce all hunter damage done and taken by 20% up to level 30 and by 10% up to level 70.
---registerPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -20)
---registerPlayerBuff(CLASS_HUNTER, 0, 30, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
---registerPlayerBuff(CLASS_HUNTER, 0, 70, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+registerPlayerBuff(CLASS_HUNTER, 0, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -20)
+registerPlayerBuff(CLASS_HUNTER, 0, 30, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
+registerPlayerBuff(CLASS_HUNTER, 0, 70, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 -- Don't reduce survival hunter damage done and taken at all. This overrides (all) previous hunter buffs of same type.
---registerPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+registerPlayerBuff(CLASS_HUNTER, SPEC_HUNTER_SURVIVAL, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 
 -- Reduce BM hunter pet damage by 10% all the way until level 80. These override previous hunter buffs of same type.
---registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
---registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
+registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 0, SPELL_BUFF_DAMAGE_DONE_TAKEN, -10)
+registerPlayerBuff(CLASS_HUNTER, PET_HUNTER_BEASTMASTERY, 80, SPELL_BUFF_DAMAGE_DONE_TAKEN, 0)
 
 
 --------------------------------------------------
@@ -414,7 +413,7 @@ local function applyPlayerBuffs (player)
     
     for classKey, classValues in pairs(playerBuffs) do
         
-        if classKey == classID then
+        if classKey == classID or classID == CLASS_HUNTER then
             
             -- Buffs need to be sorted by talentSpecKey (asc) to handle the class buffs first.
             local orderedTalentSpecKeys  = {}
